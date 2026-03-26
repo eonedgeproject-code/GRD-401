@@ -1,0 +1,3087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRD-401 — Autonomous Trading Intelligence</title>
+<meta name="description" content="Next-generation autonomous AI trading agent on Solana. ML inference × on-chain execution. No human in the loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #07080D;
+  --surface: #0F1018;
+  --primary: #00A3FF;
+  --accent: #00FF94;
+  --text: #E0E8FF;
+  --muted: #3A4060;
+  --grid: #141824;
+  --dim: #5A6080;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── GRID BACKGROUND ── */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.grid-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, transparent 0%, var(--bg) 70%);
+}
+
+/* ── SCANLINE ── */
+.scanline {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,163,255,0.015) 2px,
+    rgba(0,163,255,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── LAYOUT ── */
+section { position: relative; z-index: 2; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 0;
+  background: rgba(7,8,13,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--grid);
+}
+
+nav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+
+.nav-logo span { color: var(--primary); }
+
+.nav-links { display: flex; gap: 32px; align-items: center; }
+
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover { color: var(--primary); }
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 80px;
+  position: relative;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-left {}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border: 1px solid var(--muted);
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 32px;
+  animation: fadeUp 0.8s ease both;
+}
+
+.hero-badge .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(40px, 5vw, 72px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  animation: fadeUp 0.8s ease 0.1s both;
+}
+
+.hero h1 .blue { color: var(--primary); }
+.hero h1 .green { color: var(--accent); }
+
+.hero-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(14px, 1.5vw, 18px);
+  color: var(--dim);
+  margin-bottom: 32px;
+  letter-spacing: 0.02em;
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--dim);
+  max-width: 480px;
+  margin-bottom: 40px;
+  line-height: 1.7;
+  animation: fadeUp 0.8s ease 0.3s both;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  animation: fadeUp 0.8s ease 0.4s both;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--primary);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.btn-primary:hover {
+  background: #33b5ff;
+  box-shadow: 0 0 30px rgba(0,163,255,0.3);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--muted);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ── HERO GRID MARK ── */
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeUp 1s ease 0.3s both;
+}
+
+.grid-mark {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(4px, 1vw, 8px);
+  width: clamp(180px, 22vw, 300px);
+  filter: drop-shadow(0 0 40px rgba(0,163,255,0.15));
+}
+
+.grid-mark .cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  transition: all 0.6s ease;
+}
+
+.cell.blue {
+  background: var(--primary);
+  box-shadow: 0 0 12px rgba(0,163,255,0.3);
+  animation: cellPulse 4s ease-in-out infinite;
+}
+
+.cell.green {
+  background: var(--accent);
+  box-shadow: 0 0 12px rgba(0,255,148,0.3);
+  animation: cellPulse 4s ease-in-out infinite 0.5s;
+}
+
+.cell.empty {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+}
+
+@keyframes cellPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  padding: 40px 0;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  position: relative;
+  z-index: 2;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.stat-item { text-align: center; }
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.stat-value .green { color: var(--accent); }
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 4px;
+}
+
+/* ── FEATURES ── */
+.features {
+  padding: 120px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.feature-card:hover {
+  border-color: rgba(0,163,255,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  margin-bottom: 20px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--muted);
+  color: var(--primary);
+}
+
+.feature-card h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+
+.feature-card p {
+  font-size: 14px;
+  color: var(--dim);
+  line-height: 1.7;
+}
+
+/* ── LIVE STATS DASHBOARD ── */
+.dashboard {
+  padding: 120px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.dash-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  overflow: hidden;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--grid);
+  background: rgba(7,8,13,0.5);
+}
+
+.dash-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.dash-topbar-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+
+.dash-topbar-right {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 0.05em;
+}
+
+.dash-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+
+.dash-panel {
+  padding: 28px 24px;
+  border-right: 1px solid var(--grid);
+}
+
+.dash-panel:last-child { border-right: none; }
+
+.dash-panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+.dash-panel-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dash-panel-value.up { color: var(--accent); }
+.dash-panel-value.blue { color: var(--primary); }
+
+.dash-panel-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 4px;
+}
+
+/* Chart area */
+.dash-chart {
+  padding: 24px;
+  border-top: 1px solid var(--grid);
+  height: 240px;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Recent trades */
+.dash-trades {
+  border-top: 1px solid var(--grid);
+}
+
+.trades-header {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--grid);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.trade-row {
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--grid);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.trade-row:hover { background: rgba(0,163,255,0.03); }
+
+.trade-row .pair { color: var(--text); }
+.trade-row .side-buy { color: var(--accent); }
+.trade-row .side-sell { color: #FF4466; }
+.trade-row .price { color: var(--dim); }
+.trade-row .amount { color: var(--dim); }
+.trade-row .time { color: var(--muted); }
+
+/* ── TERMINAL ── */
+.terminal-section {
+  padding: 120px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.terminal {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  max-width: 960px;
+  margin: 0 auto;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(7,8,13,0.6);
+  border-bottom: 1px solid var(--grid);
+}
+
+.terminal-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+}
+
+.terminal-dot.r { background: #FF4466; border-color: #FF4466; }
+.terminal-dot.y { background: #FFAA33; border-color: #FFAA33; }
+.terminal-dot.g { background: var(--accent); border-color: var(--accent); }
+
+.terminal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+.terminal-bar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.term-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1px solid rgba(0,255,148,0.2);
+  background: rgba(0,255,148,0.05);
+}
+
+.term-status-badge .blink-sm {
+  width: 5px; height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.terminal-body {
+  padding: 0;
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.term-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.term-output::-webkit-scrollbar { width: 4px; }
+.term-output::-webkit-scrollbar-track { background: transparent; }
+.term-output::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+
+.term-line { animation: termFade 0.2s ease forwards; margin-bottom: 1px; word-wrap: break-word; }
+.t-prompt { color: var(--primary); }
+.t-cmd { color: var(--text); }
+.t-out { color: var(--dim); }
+.t-ok { color: var(--accent); }
+.t-warn { color: #FFAA33; }
+.t-err { color: #FF4466; }
+.t-info { color: var(--primary); }
+.t-muted { color: var(--muted); }
+.t-heading { color: var(--text); font-weight: 700; }
+.t-accent { color: var(--accent); }
+.t-blue { color: var(--primary); }
+.t-table-header { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+
+.term-input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--grid);
+  background: rgba(7,8,13,0.4);
+  gap: 8px;
+  position: relative;
+}
+
+.term-prompt-label {
+  color: var(--primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.term-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  caret-color: var(--primary);
+  letter-spacing: 0.01em;
+}
+
+.term-input::placeholder { color: var(--muted); }
+
+.term-autocomplete {
+  position: absolute;
+  bottom: 100%;
+  left: 20px;
+  right: 20px;
+  background: var(--bg);
+  border: 1px solid var(--grid);
+  border-bottom: none;
+  max-height: 180px;
+  overflow-y: auto;
+  display: none;
+  z-index: 10;
+}
+
+.term-autocomplete.show { display: block; }
+
+.ac-item {
+  padding: 6px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--dim);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  transition: background 0.15s;
+}
+
+.ac-item:hover, .ac-item.active {
+  background: rgba(0,163,255,0.08);
+  color: var(--text);
+}
+
+.ac-item .ac-desc { color: var(--muted); font-size: 11px; }
+
+.term-hint {
+  padding: 6px 20px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  border-top: 1px solid var(--grid);
+  background: rgba(7,8,13,0.3);
+  display: flex;
+  gap: 20px;
+}
+
+.term-hint span { opacity: 0.6; }
+.term-hint kbd {
+  background: rgba(255,255,255,0.05);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--grid);
+  font-size: 10px;
+}
+
+/* Live feed notification */
+.term-feed-line {
+  animation: feedSlide 0.4s ease forwards;
+  border-left: 2px solid var(--primary);
+  padding-left: 10px;
+  margin: 4px 0;
+}
+
+@keyframes feedSlide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes termFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── WALLET CONNECT ── */
+.wallet-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.05em;
+}
+
+.wallet-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.wallet-btn.connected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wallet-btn .wallet-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.wallet-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  min-width: 280px;
+  z-index: 200;
+  display: none;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+
+.wallet-dropdown.show { display: block; }
+
+.wd-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--grid);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wd-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.wd-disconnect {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--muted);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wd-disconnect:hover { border-color: #FF4466; color: #FF4466; }
+
+.wd-row {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--grid);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.wd-row .label { color: var(--muted); }
+.wd-row .value { color: var(--text); }
+.wd-row .value.sol { color: var(--primary); }
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.connection-indicator .dot-ws {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background 0.3s;
+}
+
+.connection-indicator .dot-ws.live {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.connection-indicator .ws-label {
+  color: var(--muted);
+  transition: color 0.3s;
+}
+
+.connection-indicator .ws-label.live { color: var(--accent); }
+
+/* ── FOOTER ── */
+footer {
+  padding: 48px 0;
+  border-top: 1px solid var(--grid);
+  position: relative;
+  z-index: 2;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.footer-left span { color: var(--primary); }
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-links a:hover { color: var(--primary); }
+
+.footer-copy {
+  text-align: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--grid);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── CORNER BRACKETS ── */
+.corner-brackets {
+  position: absolute;
+  inset: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bracket {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+}
+
+.bracket::before, .bracket::after {
+  content: '';
+  position: absolute;
+  background: var(--primary);
+  opacity: 0.4;
+}
+
+.bracket.tl { top: 0; left: 0; }
+.bracket.tl::before { top: 0; left: 0; width: 40px; height: 2px; }
+.bracket.tl::after { top: 0; left: 0; width: 2px; height: 40px; }
+
+.bracket.tr { top: 0; right: 0; }
+.bracket.tr::before { top: 0; right: 0; width: 40px; height: 2px; }
+.bracket.tr::after { top: 0; right: 0; width: 2px; height: 40px; }
+
+.bracket.bl { bottom: 0; left: 0; }
+.bracket.bl::before { bottom: 0; left: 0; width: 40px; height: 2px; }
+.bracket.bl::after { bottom: 0; left: 0; width: 2px; height: 40px; }
+
+.bracket.br { bottom: 0; right: 0; }
+.bracket.br::before { bottom: 0; right: 0; width: 40px; height: 2px; }
+.bracket.br::after { bottom: 0; right: 0; width: 2px; height: 40px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .nav-links { display: none; }
+  .connection-indicator { display: none; }
+}
+
+@media (max-width: 680px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+  .hero-desc { margin: 0 auto 40px; }
+  .hero-actions { justify-content: center; flex-wrap: wrap; }
+  .hero-visual { order: -1; }
+  .grid-mark { width: 180px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .dash-body { grid-template-columns: 1fr; }
+  .dash-panel { border-right: none; border-bottom: 1px solid var(--grid); }
+  .footer-content { flex-direction: column; gap: 24px; }
+  .trades-header, .trade-row { grid-template-columns: 1fr 1fr 1fr; }
+  .trade-row .amount, .trade-row .time { display: none; }
+  .trades-header span:nth-child(4), .trades-header span:nth-child(5) { display: none; }
+  .nav-status { display: none; }
+}
+
+@media (max-width: 480px) {
+  .hero-actions { flex-direction: column; align-items: center; }
+  .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-logo"><span>GRD</span>-401</a>
+    <div class="nav-links">
+      <a href="#features">Systems</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#terminal">Terminal</a>
+    </div>
+    <div class="nav-right">
+      <div class="connection-indicator">
+        <div class="dot-ws" id="wsDot"></div>
+        <span class="ws-label" id="wsLabel">OFFLINE</span>
+      </div>
+      <div class="nav-status">
+        <div class="status-dot"></div>
+        GRID ONLINE
+      </div>
+      <button class="wallet-btn" id="walletBtn" onclick="handleWalletClick()">
+        <svg class="wallet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="16" cy="14" r="1.5"/></svg>
+        <span id="walletBtnText">Connect</span>
+      </button>
+      <div class="wallet-dropdown" id="walletDropdown">
+        <div class="wd-header">
+          <span class="wd-address" id="wdAddress">—</span>
+          <button class="wd-disconnect" onclick="disconnectWallet()">Disconnect</button>
+        </div>
+        <div class="wd-row"><span class="label">SOL Balance</span><span class="value sol" id="wdBalance">—</span></div>
+        <div class="wd-row"><span class="label">Token Accounts</span><span class="value" id="wdTokens">—</span></div>
+        <div class="wd-row"><span class="label">Session</span><span class="value" id="wdSession">—</span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="corner-brackets">
+    <div class="bracket tl"></div>
+    <div class="bracket tr"></div>
+    <div class="bracket bl"></div>
+    <div class="bracket br"></div>
+  </div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <div class="dot"></div>
+          Solana Mainnet — Live
+        </div>
+        <h1>
+          <span class="blue">GRD</span>-401
+        </h1>
+        <div class="hero-sub">Autonomous Trading Intelligence</div>
+        <p class="hero-desc">
+          Next-generation AI agent engineered for high-performance trading on Solana. 
+          ML inference × on-chain execution. Sub-second precision. 
+          No human in the loop.
+        </p>
+        <div class="hero-actions">
+          <a href="#terminal" class="btn-primary">
+            <span>▸</span> Initialize Agent
+          </a>
+          <a href="#features" class="btn-secondary">
+            Read Docs →
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="grid-mark" id="gridMark"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="statTrades">0</div>
+        <div class="stat-label">Trades Executed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value"><span class="green" id="statWinrate">0</span>%</div>
+        <div class="stat-label">Win Rate</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statLatency">0</div>
+        <div class="stat-label">Avg Latency (ms)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statUptime">0</div>
+        <div class="stat-label">Uptime (hours)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">[ Core Systems ]</div>
+      <h2 class="section-title">How GRD-401 Operates</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon">⚡</div>
+        <h3>Signal Engine</h3>
+        <p>Multi-model ML inference scans Solana order flow, liquidity shifts, and whale movements in real-time. Patterns detected. Entries calculated. No human bias.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">◎</div>
+        <h3>Execution Core</h3>
+        <p>Sub-second trade execution via optimized Solana RPC routing. Priority fee calibration. Slippage modeling. Every millisecond is engineered.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">⬡</div>
+        <h3>Risk Matrix</h3>
+        <p>Dynamic position sizing, automated stop-loss triggers, and portfolio heat mapping. The grid protects capital before it hunts alpha.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">◈</div>
+        <h3>Liquidity Scanner</h3>
+        <p>Continuous monitoring of DEX pools, AMM curves, and cross-market spreads. GRD-401 finds inefficiencies humans can't see at this speed.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">▣</div>
+        <h3>Adaptive Learning</h3>
+        <p>On-chain feedback loops refine strategy weights every cycle. The agent evolves with market conditions. What worked yesterday gets questioned today.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">◇</div>
+        <h3>Permissionless</h3>
+        <p>No KYC. No intermediaries. No human gatekeeper. GRD-401 operates fully on-chain, governed by code and validated by Solana consensus.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE DASHBOARD -->
+<section class="dashboard" id="dashboard">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">[ Live Telemetry ]</div>
+      <h2 class="section-title">Agent Dashboard</h2>
+    </div>
+    <div class="dash-wrapper fade-in">
+      <div class="dash-topbar">
+        <div class="dash-topbar-left">
+          <div class="dash-dot"></div>
+          <span class="dash-topbar-title">GRD-401 MAINNET</span>
+        </div>
+        <div class="dash-topbar-right" id="dashTime">--:--:-- UTC</div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-panel">
+          <div class="dash-panel-label">Portfolio Value</div>
+          <div class="dash-panel-value" id="dashPortfolio">$0.00</div>
+          <div class="dash-panel-sub up" id="dashPnl">+0.00%</div>
+        </div>
+        <div class="dash-panel">
+          <div class="dash-panel-label">Active Positions</div>
+          <div class="dash-panel-value blue" id="dashPositions">0</div>
+          <div class="dash-panel-sub">across <span id="dashPairs">0</span> pairs</div>
+        </div>
+        <div class="dash-panel">
+          <div class="dash-panel-label">24h Volume</div>
+          <div class="dash-panel-value" id="dashVolume">$0</div>
+          <div class="dash-panel-sub"><span id="dashTxCount">0</span> transactions</div>
+        </div>
+      </div>
+      <div class="dash-chart">
+        <canvas class="chart-canvas" id="chartCanvas"></canvas>
+      </div>
+      <div class="dash-trades">
+        <div class="trades-header">
+          <span>Pair</span>
+          <span>Side</span>
+          <span>Price</span>
+          <span>Amount</span>
+          <span>Time</span>
+        </div>
+        <div id="tradeRows"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<section class="terminal-section" id="terminal">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">[ Agent Console ]</div>
+      <h2 class="section-title">Interactive Terminal</h2>
+    </div>
+    <div class="terminal fade-in" id="terminalWrap">
+      <div class="terminal-bar">
+        <div class="terminal-bar-left">
+          <div class="terminal-dot r"></div>
+          <div class="terminal-dot y"></div>
+          <div class="terminal-dot g"></div>
+          <span class="terminal-title">grd-401@solana-mainnet ~ </span>
+        </div>
+        <div class="terminal-bar-right">
+          <div class="term-status-badge">
+            <div class="blink-sm"></div>
+            LIVE
+          </div>
+        </div>
+      </div>
+      <div class="terminal-body">
+        <div class="term-output" id="termOutput"></div>
+        <div class="term-input-wrap">
+          <div class="term-autocomplete" id="termAC"></div>
+          <span class="term-prompt-label">grd-401 ❯</span>
+          <input type="text" class="term-input" id="termInput" placeholder="type 'help' to get started..." spellcheck="false" autocomplete="off" />
+        </div>
+        <div class="term-hint">
+          <span><kbd>Tab</kbd> autocomplete</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> history</span>
+          <span><kbd>Enter</kbd> execute</span>
+          <span><kbd>Ctrl+L</kbd> clear</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-left">
+        <span>GRD</span>-401
+      </div>
+      <div class="footer-links">
+        <a href="https://x.com/" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Twitter
+        </a>
+        <a href="https://t.me/" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          Telegram
+        </a>
+        <a href="https://github.com/" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+    <div class="footer-copy">
+      GRD-401 © 2026 — THE GRID DOESN'T SLEEP
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── GRID MARK (Logo in Hero) ──
+const pattern = [
+  [1,1,1,1,1],
+  [1,0,0,0,0],
+  [1,0,2,2,2],
+  [1,0,2,0,2],
+  [1,1,1,1,2],
+];
+
+const gridMark = document.getElementById('gridMark');
+pattern.forEach(row => {
+  row.forEach(val => {
+    const cell = document.createElement('div');
+    cell.className = 'cell ' + (val === 1 ? 'blue' : val === 2 ? 'green' : 'empty');
+    gridMark.appendChild(cell);
+  });
+});
+
+// ── COUNTER ANIMATION ──
+function animateCounter(el, target, duration = 2000, suffix = '') {
+  const start = performance.now();
+  const isFloat = String(target).includes('.');
+  
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = target * ease;
+    
+    if (isFloat) {
+      el.textContent = current.toFixed(1) + suffix;
+    } else {
+      el.textContent = Math.floor(current).toLocaleString() + suffix;
+    }
+    
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// Trigger counters on load
+setTimeout(() => {
+  animateCounter(document.getElementById('statTrades'), 12847);
+  animateCounter(document.getElementById('statWinrate'), 73.2, 2000);
+  animateCounter(document.getElementById('statLatency'), 47);
+  animateCounter(document.getElementById('statUptime'), 2184);
+}, 500);
+
+// ── DASHBOARD SIMULATION ──
+function updateDashboard() {
+  const now = new Date();
+  document.getElementById('dashTime').textContent = 
+    now.toUTCString().split(' ')[4] + ' UTC';
+  
+  const portfolio = 142580 + Math.random() * 2000 - 1000;
+  document.getElementById('dashPortfolio').textContent = 
+    '$' + portfolio.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  
+  const pnl = 12.4 + Math.random() * 2 - 1;
+  const pnlEl = document.getElementById('dashPnl');
+  pnlEl.textContent = (pnl > 0 ? '+' : '') + pnl.toFixed(2) + '%';
+  pnlEl.style.color = pnl > 0 ? '#00FF94' : '#FF4466';
+  
+  document.getElementById('dashPositions').textContent = Math.floor(3 + Math.random() * 5);
+  document.getElementById('dashPairs').textContent = Math.floor(8 + Math.random() * 6);
+  
+  const vol = 847000 + Math.random() * 100000;
+  document.getElementById('dashVolume').textContent = 
+    '$' + (vol / 1000).toFixed(0) + 'K';
+  document.getElementById('dashTxCount').textContent = Math.floor(180 + Math.random() * 60);
+}
+
+updateDashboard();
+setInterval(updateDashboard, 3000);
+
+// ── CHART ──
+const canvas = document.getElementById('chartCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let chartData = [];
+for (let i = 0; i < 60; i++) {
+  chartData.push(50 + Math.sin(i * 0.15) * 20 + Math.random() * 15);
+}
+
+function drawChart() {
+  resizeCanvas();
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  
+  const max = Math.max(...chartData);
+  const min = Math.min(...chartData);
+  const range = max - min || 1;
+  const pad = 10;
+  
+  // Grid lines
+  ctx.strokeStyle = '#141824';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const y = pad + (i / 4) * (h - 2 * pad);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+  
+  // Line
+  ctx.strokeStyle = '#00A3FF';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  chartData.forEach((val, i) => {
+    const x = (i / (chartData.length - 1)) * w;
+    const y = h - pad - ((val - min) / range) * (h - 2 * pad);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, h);
+  gradient.addColorStop(0, 'rgba(0,163,255,0.15)');
+  gradient.addColorStop(1, 'rgba(0,163,255,0)');
+  
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  
+  // Endpoint dot
+  const lastX = w;
+  const lastY = h - pad - ((chartData[chartData.length - 1] - min) / range) * (h - 2 * pad);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#00A3FF';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,163,255,0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+drawChart();
+
+setInterval(() => {
+  chartData.shift();
+  const last = chartData[chartData.length - 1];
+  chartData.push(last + Math.random() * 6 - 3);
+  drawChart();
+}, 2000);
+
+// ── TRADES ──
+const pairs = ['SOL/USDC', 'RAY/SOL', 'JUP/USDC', 'BONK/SOL', 'WIF/USDC', 'JTO/SOL', 'PYTH/USDC', 'ORCA/SOL'];
+const tradeContainer = document.getElementById('tradeRows');
+
+function generateTrade() {
+  const pair = pairs[Math.floor(Math.random() * pairs.length)];
+  const isBuy = Math.random() > 0.45;
+  const prices = { 'SOL/USDC': 185, 'RAY/SOL': 0.018, 'JUP/USDC': 1.42, 'BONK/SOL': 0.0000003, 'WIF/USDC': 2.15, 'JTO/SOL': 0.021, 'PYTH/USDC': 0.48, 'ORCA/SOL': 0.025 };
+  const base = prices[pair] || 1;
+  const price = (base + (Math.random() - 0.5) * base * 0.02).toPrecision(4);
+  const amount = (Math.random() * 5000 + 100).toFixed(2);
+  const now = new Date();
+  const time = now.toTimeString().split(' ')[0];
+  
+  return `<div class="trade-row">
+    <span class="pair">${pair}</span>
+    <span class="${isBuy ? 'side-buy' : 'side-sell'}">${isBuy ? 'BUY' : 'SELL'}</span>
+    <span class="price">${price}</span>
+    <span class="amount">${amount}</span>
+    <span class="time">${time}</span>
+  </div>`;
+}
+
+// Initial trades
+for (let i = 0; i < 5; i++) {
+  tradeContainer.innerHTML += generateTrade();
+}
+
+setInterval(() => {
+  tradeContainer.innerHTML = generateTrade() + tradeContainer.innerHTML;
+  if (tradeContainer.children.length > 8) {
+    tradeContainer.removeChild(tradeContainer.lastElementChild);
+  }
+}, 4000);
+
+// ── INTERACTIVE TERMINAL ──
+const termOut = document.getElementById('termOutput');
+const termInput = document.getElementById('termInput');
+const termAC = document.getElementById('termAC');
+const termWrap = document.getElementById('terminalWrap');
+
+let cmdHistory = [];
+let historyIdx = -1;
+let acIdx = -1;
+let booted = false;
+let liveFeedInterval = null;
+
+// Simulated state
+const agentState = {
+  version: '4.1.0',
+  network: 'mainnet-beta',
+  rpc: 'https://api.mainnet-beta.solana.com',
+  rpcLatency: 42,
+  startTime: Date.now() - (2184 * 3600 * 1000),
+  portfolio: 142580.44,
+  pnl24h: 12.4,
+  totalTrades: 12847,
+  winRate: 73.2,
+  activePairs: 8,
+  poolsMonitored: 847,
+  maxPosition: 5.0,
+  stopLoss: 2.5,
+  trailingStop: true,
+  slippageTol: 0.3,
+  models: ['momentum_v3.2', 'meanrev_v2.8', 'flow_v4.0'],
+  positions: [
+    { pair: 'SOL/USDC', side: 'LONG', entry: 183.20, current: 185.47, size: 24.5, pnl: '+1.24%', time: '2h 14m' },
+    { pair: 'JUP/USDC', side: 'LONG', entry: 1.408, current: 1.432, size: 1240, pnl: '+1.70%', time: '47m' },
+    { pair: 'WIF/USDC', side: 'LONG', entry: 2.112, current: 2.151, size: 580, pnl: '+1.85%', time: '18m' },
+    { pair: 'ORCA/SOL', side: 'SHORT', entry: 0.0258, current: 0.0251, size: 4200, pnl: '+2.71%', time: '1h 03m' },
+  ],
+  recentTrades: [
+    { time: '14:23:07', pair: 'SOL/USDC', side: 'BUY', price: '185.42', amount: '24.5', status: 'FILLED', latency: '0.38s' },
+    { time: '14:18:51', pair: 'JUP/USDC', side: 'BUY', price: '1.428', amount: '1,240', status: 'FILLED', latency: '0.22s' },
+    { time: '14:11:33', pair: 'WIF/USDC', side: 'BUY', price: '2.151', amount: '580', status: 'FILLED', latency: '0.31s' },
+    { time: '14:02:17', pair: 'RAY/SOL', side: 'SELL', price: '0.0184', amount: '3,100', status: 'FILLED', latency: '0.29s' },
+    { time: '13:54:40', pair: 'BONK/SOL', side: 'BUY', price: '0.00000031', amount: '8.2M', status: 'FILLED', latency: '0.44s' },
+    { time: '13:41:12', pair: 'ORCA/SOL', side: 'SELL', price: '0.0258', amount: '4,200', status: 'FILLED', latency: '0.26s' },
+    { time: '13:32:55', pair: 'PYTH/USDC', side: 'BUY', price: '0.481', amount: '2,800', status: 'FILLED', latency: '0.35s' },
+    { time: '13:20:08', pair: 'JTO/SOL', side: 'BUY', price: '0.0211', amount: '5,400', status: 'FILLED', latency: '0.41s' },
+  ],
+  signals: [
+    { time: '14:23', pair: 'SOL/USDC', type: 'Bullish Divergence', confidence: 0.87, model: 'momentum_v3.2', action: 'EXECUTED' },
+    { time: '14:18', pair: 'JUP/USDC', type: 'Momentum Breakout', confidence: 0.92, model: 'momentum_v3.2', action: 'EXECUTED' },
+    { time: '14:14', pair: 'RAY/SOL', type: 'Mean Reversion', confidence: 0.79, model: 'meanrev_v2.8', action: 'SKIPPED (ρ > 0.85)' },
+    { time: '14:11', pair: 'WIF/USDC', type: 'Accumulation Phase', confidence: 0.81, model: 'flow_v4.0', action: 'EXECUTED' },
+    { time: '14:02', pair: 'RAY/SOL', type: 'Overbought Exit', confidence: 0.88, model: 'momentum_v3.2', action: 'EXECUTED' },
+    { time: '13:54', pair: 'BONK/SOL', type: 'Volume Spike', confidence: 0.74, model: 'flow_v4.0', action: 'EXECUTED' },
+  ],
+};
+
+// ── Command Registry ──
+const commands = {
+  help: {
+    desc: 'Show all available commands',
+    usage: 'help [command]',
+    fn: (args) => {
+      if (args[0] && commands[args[0]]) {
+        const c = commands[args[0]];
+        return [
+          { t: 'heading', v: `  ${args[0]}` },
+          { t: 'out', v: `  ${c.desc}` },
+          { t: 'muted', v: `  Usage: ${c.usage || args[0]}` },
+        ];
+      }
+      const lines = [
+        { t: 'heading', v: '  GRD-401 COMMAND REFERENCE' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+      ];
+      const cats = {
+        'MONITORING': ['status', 'uptime', 'portfolio', 'positions', 'pnl'],
+        'TRADING': ['trades', 'signals', 'scan', 'exec'],
+        'AI AGENT': ['analyze', 'advisor'],
+        'SYSTEM': ['config', 'pools', 'risk', 'logs', 'version'],
+        'UTILITY': ['clear', 'help', 'feed'],
+      };
+      for (const [cat, cmds] of Object.entries(cats)) {
+        lines.push({ t: 'out', v: '' });
+        lines.push({ t: 'blue', v: `  [${cat}]` });
+        for (const name of cmds) {
+          const c = commands[name];
+          if (c) lines.push({ t: 'out', v: `    ${name.padEnd(14)} ${c.desc}` });
+        }
+      }
+      lines.push({ t: 'out', v: '' });
+      lines.push({ t: 'muted', v: '  Type help <command> for detailed usage' });
+      return lines;
+    }
+  },
+
+  status: {
+    desc: 'Agent status overview',
+    fn: () => {
+      const upSec = Math.floor((Date.now() - agentState.startTime) / 1000);
+      const upH = Math.floor(upSec / 3600);
+      const upM = Math.floor((upSec % 3600) / 60);
+      return [
+        { t: 'heading', v: '  GRD-401 STATUS' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'ok', v: `  ● Agent Status        ONLINE` },
+        { t: 'out', v: `  ○ Version             v${agentState.version}` },
+        { t: 'out', v: `  ○ Network             ${agentState.network}` },
+        { t: 'out', v: `  ○ RPC Latency         ${agentState.rpcLatency}ms` },
+        { t: 'out', v: `  ○ Uptime              ${upH}h ${upM}m` },
+        { t: 'out', v: `  ○ Pools Monitored     ${agentState.poolsMonitored}` },
+        { t: 'out', v: `  ○ ML Models Active    ${agentState.models.length}/3` },
+        { t: 'out', v: '' },
+        { t: 'info', v: `  Models: ${agentState.models.join(', ')}` },
+      ];
+    }
+  },
+
+  uptime: {
+    desc: 'Show agent uptime',
+    fn: () => {
+      const upSec = Math.floor((Date.now() - agentState.startTime) / 1000);
+      const days = Math.floor(upSec / 86400);
+      const hrs = Math.floor((upSec % 86400) / 3600);
+      const mins = Math.floor((upSec % 3600) / 60);
+      return [
+        { t: 'ok', v: `  Uptime: ${days}d ${hrs}h ${mins}m` },
+        { t: 'muted', v: `  Since: ${new Date(agentState.startTime).toISOString()}` },
+      ];
+    }
+  },
+
+  portfolio: {
+    desc: 'Portfolio value breakdown',
+    fn: () => {
+      const val = agentState.portfolio + (Math.random() * 1000 - 500);
+      const pnl = agentState.pnl24h + (Math.random() * 2 - 1);
+      return [
+        { t: 'heading', v: '  PORTFOLIO OVERVIEW' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Total Value           $${val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}` },
+        { t: pnl > 0 ? 'ok' : 'err', v: `  24h P&L               ${pnl > 0 ? '+':''}${pnl.toFixed(2)}%` },
+        { t: 'out', v: `  Active Positions      ${agentState.positions.length}` },
+        { t: 'out', v: `  Available Margin      $${(val * 0.62).toFixed(2)}` },
+        { t: 'out', v: `  Deployed Capital      ${((1-0.62)*100).toFixed(1)}%` },
+        { t: 'out', v: '' },
+        { t: 'muted', v: '  Allocation:' },
+        { t: 'info', v: `  ████████████░░░░░░░░  SOL    38.2%` },
+        { t: 'ok',   v: `  ██████░░░░░░░░░░░░░░  JUP    14.8%` },
+        { t: 'info', v: `  █████░░░░░░░░░░░░░░░  WIF    11.4%` },
+        { t: 'out',  v: `  ███░░░░░░░░░░░░░░░░░  ORCA    7.2%` },
+        { t: 'muted',v: `  ░░░░░░░░░░░░░░░░░░░░  USDC   28.4%` },
+      ];
+    }
+  },
+
+  positions: {
+    desc: 'View active positions',
+    fn: () => {
+      const lines = [
+        { t: 'heading', v: '  ACTIVE POSITIONS' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────────────────────────' },
+        { t: 'table-header', v: '  PAIR         SIDE    ENTRY       CURRENT     SIZE       P&L       AGE' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────────────────────────' },
+      ];
+      for (const p of agentState.positions) {
+        const cur = p.current + (Math.random() * p.current * 0.005 - p.current * 0.0025);
+        const pnlVal = ((cur - p.entry) / p.entry * 100 * (p.side === 'SHORT' ? -1 : 1));
+        const pnlStr = (pnlVal > 0 ? '+' : '') + pnlVal.toFixed(2) + '%';
+        const sideClass = p.side === 'LONG' ? 'ok' : 'err';
+        lines.push({ t: 'out', v: `  ${p.pair.padEnd(13)}`, parts: [
+          { t: sideClass, v: p.side.padEnd(8) },
+          { t: 'out', v: `${String(p.entry).padEnd(12)}${cur.toPrecision(5).padEnd(12)}${String(p.size).padEnd(11)}` },
+          { t: pnlVal > 0 ? 'ok' : 'err', v: pnlStr.padEnd(10) },
+          { t: 'muted', v: p.time },
+        ]});
+      }
+      lines.push({ t: 'muted', v: '  ─────────────────────────────────────────────────────────────────' });
+      lines.push({ t: 'muted', v: `  ${agentState.positions.length} active position(s)` });
+      return lines;
+    }
+  },
+
+  trades: {
+    desc: 'Recent trade history',
+    usage: 'trades [count]',
+    fn: (args) => {
+      const count = Math.min(parseInt(args[0]) || 8, agentState.recentTrades.length);
+      const lines = [
+        { t: 'heading', v: '  RECENT TRADES' },
+        { t: 'muted', v: '  ────────────────────────────────────────────────────────────────────' },
+        { t: 'table-header', v: '  TIME       PAIR         SIDE    PRICE          AMOUNT     LATENCY' },
+        { t: 'muted', v: '  ────────────────────────────────────────────────────────────────────' },
+      ];
+      for (let i = 0; i < count; i++) {
+        const tr = agentState.recentTrades[i];
+        const sideClass = tr.side === 'BUY' ? 'ok' : 'err';
+        lines.push({ t: 'out', v: `  ${tr.time}  ${tr.pair.padEnd(13)}`, parts: [
+          { t: sideClass, v: tr.side.padEnd(8) },
+          { t: 'out', v: `${tr.price.padEnd(15)}${tr.amount.padEnd(11)}${tr.latency}` },
+        ]});
+      }
+      lines.push({ t: 'muted', v: '  ────────────────────────────────────────────────────────────────────' });
+      lines.push({ t: 'muted', v: `  Showing ${count} of ${agentState.totalTrades.toLocaleString()} total trades` });
+      return lines;
+    }
+  },
+
+  signals: {
+    desc: 'Recent signal detections',
+    fn: () => {
+      const lines = [
+        { t: 'heading', v: '  SIGNAL LOG' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────────────────────────────' },
+      ];
+      for (const s of agentState.signals) {
+        const confBar = '█'.repeat(Math.round(s.confidence * 10)) + '░'.repeat(10 - Math.round(s.confidence * 10));
+        const actionClass = s.action === 'EXECUTED' ? 'ok' : 'warn';
+        lines.push({ t: 'out', v: `  ${s.time}  ${s.pair.padEnd(12)} ${s.type.padEnd(22)}`, parts: [
+          { t: 'info', v: `${confBar} ${(s.confidence * 100).toFixed(0)}%  ` },
+          { t: actionClass, v: s.action },
+        ]});
+      }
+      lines.push({ t: 'out', v: '' });
+      lines.push({ t: 'muted', v: `  Signal source: ${agentState.models.join(' + ')}` });
+      return lines;
+    }
+  },
+
+  scan: {
+    desc: 'Scan a trading pair for signals',
+    usage: 'scan <pair>  (e.g. scan SOL/USDC)',
+    fn: (args) => {
+      if (!args[0]) return [{ t: 'warn', v: '  Usage: scan <PAIR>  (e.g. scan SOL/USDC)' }];
+      const pair = args[0].toUpperCase();
+      const confidence = (0.5 + Math.random() * 0.45).toFixed(2);
+      const signals = ['Bullish Divergence', 'Momentum Breakout', 'Mean Reversion', 'Volume Spike', 'Accumulation Phase', 'Bearish Engulfing', 'Support Bounce'];
+      const signal = signals[Math.floor(Math.random() * signals.length)];
+      const vol24h = (Math.random() * 5000000 + 100000).toFixed(0);
+      const liq = (Math.random() * 2000000 + 50000).toFixed(0);
+      const spread = (Math.random() * 0.5 + 0.01).toFixed(3);
+      const confNum = parseFloat(confidence);
+      const confBar = '█'.repeat(Math.round(confNum * 20)) + '░'.repeat(20 - Math.round(confNum * 20));
+
+      return [
+        { t: 'heading', v: `  SCAN: ${pair}` },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  24h Volume        $${parseInt(vol24h).toLocaleString()}` },
+        { t: 'out', v: `  Liquidity         $${parseInt(liq).toLocaleString()}` },
+        { t: 'out', v: `  Spread            ${spread}%` },
+        { t: 'out', v: '' },
+        { t: 'info', v: `  Signal Detected:  ${signal}` },
+        { t: 'out', v: `  Confidence:       ${confBar} ${(confNum * 100).toFixed(0)}%` },
+        { t: 'out', v: '' },
+        confNum >= 0.75
+          ? { t: 'ok', v: `  ✓ ACTIONABLE — Confidence above threshold (≥75%)` }
+          : { t: 'warn', v: `  ⚠ MONITORING — Below action threshold (<75%)` },
+      ];
+    }
+  },
+
+  exec: {
+    desc: 'Simulate trade execution',
+    usage: 'exec <buy|sell> <pair> <amount>',
+    fn: (args) => {
+      if (args.length < 3) return [{ t: 'warn', v: '  Usage: exec <buy|sell> <PAIR> <AMOUNT>' }, { t: 'muted', v: '  Example: exec buy SOL/USDC 10' }];
+      const side = args[0].toUpperCase();
+      if (side !== 'BUY' && side !== 'SELL') return [{ t: 'err', v: '  Invalid side. Use BUY or SELL' }];
+      const pair = args[1].toUpperCase();
+      const amount = parseFloat(args[2]);
+      if (isNaN(amount) || amount <= 0) return [{ t: 'err', v: '  Invalid amount' }];
+
+      const basePrice = { 'SOL/USDC': 185, 'RAY/SOL': 0.018, 'JUP/USDC': 1.42, 'BONK/SOL': 0.0000003, 'WIF/USDC': 2.15, 'JTO/SOL': 0.021, 'PYTH/USDC': 0.48, 'ORCA/SOL': 0.025 }[pair] || (Math.random() * 10 + 0.1);
+      const price = (basePrice + (Math.random() - 0.5) * basePrice * 0.005).toPrecision(6);
+      const latency = (Math.random() * 0.4 + 0.15).toFixed(2);
+      const slippage = (Math.random() * 0.3).toFixed(3);
+
+      return [
+        { t: 'heading', v: `  EXECUTING ${side} ORDER` },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Pair              ${pair}` },
+        { t: 'out', v: `  Side              ${side}` },
+        { t: 'out', v: `  Amount            ${amount}` },
+        { t: 'out', v: `  Price             ${price}` },
+        { t: 'out', v: `  Slippage          ${slippage}%` },
+        { t: 'out', v: `  Latency           ${latency}s` },
+        { t: 'out', v: '' },
+        { t: 'ok', v: `  ✓ ORDER FILLED — ${side} ${amount} ${pair.split('/')[0]} @ ${price}` },
+        { t: 'muted', v: `  TX: ${Array.from({length:64}, ()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('')}` },
+      ];
+    }
+  },
+
+  pnl: {
+    desc: 'Profit & loss breakdown',
+    fn: () => {
+      const daily = agentState.pnl24h + (Math.random() * 2 - 1);
+      const weekly = daily * 5.2 + (Math.random() * 5 - 2.5);
+      const monthly = weekly * 3.8 + (Math.random() * 10 - 5);
+      return [
+        { t: 'heading', v: '  P&L BREAKDOWN' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: daily > 0 ? 'ok' : 'err', v: `  24h P&L           ${daily > 0?'+':''}${daily.toFixed(2)}%    ($${(agentState.portfolio * daily / 100).toFixed(2)})` },
+        { t: weekly > 0 ? 'ok' : 'err', v: `  7d P&L            ${weekly > 0?'+':''}${weekly.toFixed(2)}%   ($${(agentState.portfolio * weekly / 100).toFixed(2)})` },
+        { t: monthly > 0 ? 'ok' : 'err', v: `  30d P&L           ${monthly > 0?'+':''}${monthly.toFixed(2)}%  ($${(agentState.portfolio * monthly / 100).toFixed(2)})` },
+        { t: 'out', v: '' },
+        { t: 'out', v: `  Win Rate          ${agentState.winRate}%` },
+        { t: 'out', v: `  Total Trades      ${agentState.totalTrades.toLocaleString()}` },
+        { t: 'out', v: `  Avg Win           +2.14%` },
+        { t: 'out', v: `  Avg Loss          -0.87%` },
+        { t: 'out', v: `  Sharpe Ratio      2.84` },
+        { t: 'out', v: `  Max Drawdown      -4.21%` },
+      ];
+    }
+  },
+
+  config: {
+    desc: 'View or set agent configuration',
+    usage: 'config [set <param> <value>]',
+    fn: (args) => {
+      if (args[0] === 'set' && args[1] && args[2]) {
+        const param = args[1];
+        const value = args[2];
+        const validParams = ['max_position', 'stop_loss', 'trailing_stop', 'slippage_tol'];
+        if (!validParams.includes(param)) return [{ t: 'err', v: `  Unknown param: ${param}` }, { t: 'muted', v: `  Valid: ${validParams.join(', ')}` }];
+        return [
+          { t: 'warn', v: `  [CONFIG] ${param} updated: ${value}` },
+          { t: 'ok', v: '  ✓ Configuration applied — active next cycle' },
+        ];
+      }
+      return [
+        { t: 'heading', v: '  AGENT CONFIGURATION' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  max_position       ${agentState.maxPosition}%` },
+        { t: 'out', v: `  stop_loss          ${agentState.stopLoss}%` },
+        { t: 'out', v: `  trailing_stop      ${agentState.trailingStop}` },
+        { t: 'out', v: `  slippage_tol       ${agentState.slippageTol}%` },
+        { t: 'out', v: `  rpc_endpoint       ${agentState.rpc}` },
+        { t: 'out', v: `  models             ${agentState.models.join(', ')}` },
+        { t: 'out', v: '' },
+        { t: 'muted', v: '  Use: config set <param> <value>' },
+      ];
+    }
+  },
+
+  pools: {
+    desc: 'Monitored liquidity pools',
+    fn: () => {
+      const poolData = [
+        { name: 'Raydium SOL/USDC', tvl: '$48.2M', apy: '12.4%', vol: '$8.1M' },
+        { name: 'Orca JUP/USDC', tvl: '$12.8M', apy: '18.7%', vol: '$3.4M' },
+        { name: 'Raydium RAY/SOL', tvl: '$9.1M', apy: '22.1%', vol: '$2.8M' },
+        { name: 'Orca WIF/USDC', tvl: '$6.4M', apy: '34.2%', vol: '$4.2M' },
+        { name: 'Meteora BONK/SOL', tvl: '$4.8M', apy: '41.8%', vol: '$1.9M' },
+      ];
+      const lines = [
+        { t: 'heading', v: '  TOP MONITORED POOLS' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────────────────' },
+        { t: 'table-header', v: '  POOL                    TVL         APY       24h VOL' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────────────────' },
+      ];
+      for (const p of poolData) {
+        lines.push({ t: 'out', v: `  ${p.name.padEnd(24)} ${p.tvl.padEnd(12)} ${p.apy.padEnd(10)} ${p.vol}` });
+      }
+      lines.push({ t: 'muted', v: '  ─────────────────────────────────────────────────────────' });
+      lines.push({ t: 'muted', v: `  Showing top 5 of ${agentState.poolsMonitored} monitored pools` });
+      return lines;
+    }
+  },
+
+  risk: {
+    desc: 'Risk matrix overview',
+    fn: () => {
+      const heat = (38 + Math.random() * 20).toFixed(1);
+      const heatBar = Math.round(parseFloat(heat) / 5);
+      return [
+        { t: 'heading', v: '  RISK MATRIX' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Portfolio Heat       ${'█'.repeat(heatBar)}${'░'.repeat(20-heatBar)} ${heat}%` },
+        { t: 'out', v: `  Max Drawdown (30d)   -4.21%` },
+        { t: 'out', v: `  Current Exposure     ${(100 - 62).toFixed(1)}%` },
+        { t: 'out', v: `  Correlation Risk     0.42 (LOW)` },
+        { t: 'out', v: `  Volatility Regime    MODERATE` },
+        { t: 'out', v: '' },
+        { t: 'out', v: `  Stop-Loss            ${agentState.stopLoss}% per position` },
+        { t: 'out', v: `  Trailing Stop        ${agentState.trailingStop ? 'ENABLED' : 'DISABLED'}` },
+        { t: 'out', v: `  Max Position         ${agentState.maxPosition}% portfolio` },
+        { t: 'out', v: '' },
+        parseFloat(heat) < 50
+          ? { t: 'ok', v: '  ✓ Risk parameters within acceptable range' }
+          : { t: 'warn', v: '  ⚠ Elevated risk — consider reducing exposure' },
+      ];
+    }
+  },
+
+  logs: {
+    desc: 'Recent agent activity logs',
+    fn: () => {
+      const now = new Date();
+      const logEntries = [
+        { delta: 2, level: 'INFO', msg: `Cycle ${14209 + Math.floor(Math.random()*10)} complete — all systems nominal` },
+        { delta: 15, level: 'EXEC', msg: 'BUY 24.5 SOL @ $185.42 — filled 0.38s' },
+        { delta: 38, level: 'SIGNAL', msg: 'SOL/USDC bullish divergence (conf: 0.87)' },
+        { delta: 120, level: 'RISK', msg: 'RAY/SOL skipped — correlation ρ > 0.85' },
+        { delta: 185, level: 'EXEC', msg: 'BUY 1,240 JUP @ $1.428 — filled 0.22s' },
+        { delta: 300, level: 'SCAN', msg: 'Pool weights updated — 847 active' },
+        { delta: 480, level: 'EXEC', msg: 'BUY 580 WIF @ $2.151 — filled 0.31s' },
+        { delta: 720, level: 'INFO', msg: 'ML model checkpoint saved' },
+        { delta: 900, level: 'EXEC', msg: 'SELL 3,100 RAY @ $0.0184 — filled 0.29s' },
+        { delta: 1200, level: 'RISK', msg: 'Portfolio heat: 42.3% — within limits' },
+      ];
+      const lines = [{ t: 'heading', v: '  AGENT LOGS' }, { t: 'muted', v: '  ─────────────────────────────────────────────────────────' }];
+      for (const log of logEntries) {
+        const logTime = new Date(now - log.delta * 1000);
+        const ts = logTime.toTimeString().split(' ')[0];
+        const levelClass = { INFO: 'out', EXEC: 'ok', SIGNAL: 'info', RISK: 'warn', SCAN: 'out' }[log.level] || 'out';
+        lines.push({ t: levelClass, v: `  ${ts}  [${log.level.padEnd(6)}]  ${log.msg}` });
+      }
+      return lines;
+    }
+  },
+
+  version: {
+    desc: 'Version information',
+    fn: () => [
+      { t: 'heading', v: '  GRD-401' },
+      { t: 'out', v: `  Version     ${agentState.version}` },
+      { t: 'out', v: `  Build       2026.03.24-mainnet` },
+      { t: 'out', v: `  Runtime     Solana v1.18.x` },
+      { t: 'out', v: `  ML Stack    PyTorch 2.4 + ONNX inference` },
+      { t: 'out', v: `  Protocol    GRD Autonomous Agent Framework` },
+    ]
+  },
+
+  feed: {
+    desc: 'Toggle live signal feed on/off',
+    usage: 'feed [on|off]',
+    fn: (args) => {
+      const toggle = args[0] || (liveFeedInterval ? 'off' : 'on');
+      if (toggle === 'on') {
+        if (liveFeedInterval) return [{ t: 'warn', v: '  Feed already running' }];
+        startLiveFeed();
+        return [{ t: 'ok', v: '  ✓ Live signal feed ENABLED' }];
+      } else {
+        if (liveFeedInterval) { clearInterval(liveFeedInterval); liveFeedInterval = null; }
+        return [{ t: 'warn', v: '  ○ Live signal feed DISABLED' }];
+      }
+    }
+  },
+
+  clear: {
+    desc: 'Clear terminal output',
+    fn: () => { termOut.innerHTML = ''; return []; }
+  },
+
+  analyze: {
+    desc: 'AI deep analysis of a trading pair',
+    usage: 'analyze <pair>  (e.g. analyze SOL/USDC)',
+    fn: async (args) => {
+      if (!args[0]) return [{ t: 'warn', v: '  Usage: analyze <PAIR>  (e.g. analyze SOL/USDC)' }];
+      const pair = args[0].toUpperCase();
+
+      // Try API first
+      const data = await apiFetch('/api/ai/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ pair }),
+      });
+
+      if (data && data.reasoning) {
+        const r = data.reasoning;
+        const s = data.scan;
+        const ind = r.indicators || {};
+        const lines = [
+          { t: 'heading', v: `  ╔═══════════════════════════════════════════════╗` },
+          { t: 'heading', v: `  ║  GRD-401 AI ANALYSIS — ${pair.padEnd(21)}║` },
+          { t: 'heading', v: `  ╚═══════════════════════════════════════════════╝` },
+          { t: 'out', v: '' },
+        ];
+
+        // Price context
+        if (s) {
+          lines.push({ t: 'blue', v: '  [MARKET DATA]' });
+          lines.push({ t: 'out', v: `  Price           ${s.price.toPrecision(6)}` });
+          lines.push({ t: 'out', v: `  24h Range       ${s.low24h.toPrecision(5)} — ${s.high24h.toPrecision(5)}` });
+          lines.push({ t: s.change24h > 0 ? 'ok' : 'err', v: `  24h Change      ${s.change24h > 0 ? '+' : ''}${s.change24h.toFixed(2)}%` });
+          lines.push({ t: 'out', v: `  Volume          $${Math.round(s.volume24h).toLocaleString()}` });
+          lines.push({ t: 'out', v: `  Spread          ${s.spread}%` });
+          lines.push({ t: 'out', v: '' });
+        }
+
+        // Technical indicators
+        if (ind.rsi) {
+          lines.push({ t: 'blue', v: '  [TECHNICAL INDICATORS]' });
+          lines.push({ t: 'out', v: `  RSI(14)         ${ind.rsi}  ${ind.rsi > 70 ? '⚠ OVERBOUGHT' : ind.rsi < 30 ? '⚠ OVERSOLD' : '● NEUTRAL'}` });
+          lines.push({ t: 'out', v: `  MACD            ${ind.macd.histogram > 0 ? '+' : ''}${ind.macd.histogram.toFixed(4)}  (${ind.macd.signal})` });
+          lines.push({ t: 'out', v: `  EMA(9/21)       ${ind.ema.ema9} / ${ind.ema.ema21}  (${ind.ema.crossover} cross)` });
+          lines.push({ t: 'out', v: `  Bollinger       ${ind.bollinger.lower.toPrecision(5)} — ${ind.bollinger.upper.toPrecision(5)}  (width: ${ind.bollinger.width}%)` });
+          lines.push({ t: 'out', v: `  ATR(14)         ${ind.atr14}` });
+          lines.push({ t: 'out', v: `  OBV             ${ind.obv.value.toLocaleString()}  (${ind.obv.trend})` });
+          lines.push({ t: 'out', v: `  VWAP            ${ind.vwap}  (price ${ind.priceVsVwap})` });
+          lines.push({ t: 'out', v: '' });
+        }
+
+        // Signal + reasoning
+        if (r.signal) {
+          lines.push({ t: 'blue', v: '  [SIGNAL DETECTED]' });
+          lines.push({ t: 'info', v: `  Type            ${r.signal.type}` });
+          lines.push({ t: 'out', v: `  Model           ${r.signal.model}` });
+          const conf = r.signal.confidence;
+          const confBar = '█'.repeat(Math.round(conf * 20)) + '░'.repeat(20 - Math.round(conf * 20));
+          lines.push({ t: 'out', v: `  Confidence      ${confBar} ${(conf * 100).toFixed(0)}%` });
+          lines.push({ t: r.conviction === 'HIGH' ? 'ok' : r.conviction === 'LOW' || r.conviction === 'MEDIUM-LOW' ? 'warn' : 'out', v: `  Conviction      ${r.conviction}` });
+          lines.push({ t: 'out', v: '' });
+        }
+
+        // AI reasoning
+        lines.push({ t: 'blue', v: '  [AI REASONING]' });
+        lines.push({ t: 'info', v: `  ${r.summary}` });
+        lines.push({ t: 'out', v: '' });
+
+        if (r.analysis && r.analysis.length > 0) {
+          for (const a of r.analysis) {
+            lines.push({ t: 'out', v: `  → ${a}` });
+          }
+          lines.push({ t: 'out', v: '' });
+        }
+
+        if (r.risk_factors && r.risk_factors.length > 0) {
+          lines.push({ t: 'blue', v: '  [RISK FACTORS]' });
+          for (const rf of r.risk_factors) {
+            lines.push({ t: 'warn', v: `  ⚠ ${rf}` });
+          }
+        }
+
+        return lines;
+      }
+
+      // Fallback: simulated locally
+      return generateLocalAnalysis(pair);
+    }
+  },
+
+  advisor: {
+    desc: 'AI trade advisor — positions + opportunities',
+    usage: 'advisor',
+    fn: async () => {
+      const data = await apiFetch('/api/ai/advisor');
+
+      if (data && data.advice) {
+        const a = data.advice;
+        const lines = [
+          { t: 'heading', v: '  ╔═══════════════════════════════════════════════╗' },
+          { t: 'heading', v: '  ║  GRD-401 AI TRADE ADVISOR                    ║' },
+          { t: 'heading', v: '  ╚═══════════════════════════════════════════════╝' },
+          { t: 'out', v: '' },
+        ];
+
+        // Market overview
+        lines.push({ t: 'blue', v: '  [MARKET OVERVIEW]' });
+        lines.push({ t: a.market.bias === 'BULLISH' ? 'ok' : a.market.bias === 'BEARISH' ? 'err' : 'out',
+          v: `  Bias: ${a.market.bias}` });
+        lines.push({ t: 'out', v: `  ${a.market.summary}` });
+        lines.push({ t: 'out', v: '' });
+
+        // Portfolio health
+        lines.push({ t: 'blue', v: '  [PORTFOLIO HEALTH]' });
+        lines.push({ t: 'out', v: `  Win Rate        ${a.portfolio.winRate}%` });
+        lines.push({ t: 'out', v: `  Total Trades    ${a.portfolio.totalTrades}` });
+        lines.push({ t: a.portfolio.healthScore === 'STRONG' ? 'ok' : a.portfolio.healthScore === 'WEAK' ? 'err' : 'warn',
+          v: `  Health          ${a.portfolio.healthScore}` });
+        lines.push({ t: 'out', v: `  ${a.portfolio.advice}` });
+        lines.push({ t: 'out', v: '' });
+
+        // Position assessments
+        if (a.positions && a.positions.length > 0) {
+          lines.push({ t: 'blue', v: '  [POSITION ANALYSIS]' });
+          lines.push({ t: 'muted', v: '  ───────────────────────────────────────────────────────' });
+
+          for (const pos of a.positions) {
+            const pnlClass = pos.pnl > 0 ? 'ok' : 'err';
+            const urgClass = pos.urgency === 'CRITICAL' ? 'err' : pos.urgency === 'HIGH' ? 'warn' : 'muted';
+
+            lines.push({ t: 'out', v: '' });
+            lines.push({ t: 'heading', v: `  ${pos.pair}  ${pos.side}` });
+            lines.push({ t: 'out', v: `  Entry ${pos.entry}  →  Current ${pos.current}  `, parts: [
+              { t: pnlClass, v: `(${pos.pnl > 0 ? '+' : ''}${pos.pnl}%)` },
+              { t: 'muted', v: `  ${pos.holdTime}` },
+            ]});
+
+            // Recommendation box
+            const recClass = pos.recommendation.includes('EXIT') || pos.recommendation.includes('REDUCE') ? 'err' :
+                            pos.recommendation.includes('TAKE PROFIT') ? 'ok' : 'info';
+            lines.push({ t: recClass, v: `  ▶ ${pos.recommendation}` });
+            lines.push({ t: 'out', v: `    ${pos.reasoning}` });
+            lines.push({ t: urgClass, v: `    Urgency: ${pos.urgency}  |  RSI: ${pos.indicators.rsi}  MACD: ${pos.indicators.macd}  OBV: ${pos.indicators.obv}` });
+          }
+          lines.push({ t: 'out', v: '' });
+        }
+
+        // Opportunities
+        if (a.opportunities && a.opportunities.length > 0) {
+          lines.push({ t: 'blue', v: '  [NEW OPPORTUNITIES]' });
+          lines.push({ t: 'muted', v: '  ───────────────────────────────────────────────────────' });
+
+          for (const opp of a.opportunities) {
+            lines.push({ t: 'out', v: '' });
+            lines.push({ t: 'ok', v: `  ${opp.pair}  —  ${opp.type}` });
+            const confBar = '█'.repeat(Math.round(opp.confidence * 10)) + '░'.repeat(10 - Math.round(opp.confidence * 10));
+            lines.push({ t: 'out', v: `  Confidence      ${confBar} ${(opp.confidence * 100).toFixed(0)}%` });
+            lines.push({ t: 'out', v: `  Entry           ${opp.entry}` });
+            lines.push({ t: 'ok', v: `  Target          ${opp.target}` });
+            lines.push({ t: 'err', v: `  Stop            ${opp.stop}` });
+            lines.push({ t: 'out', v: `  R:R             ${opp.riskReward}` });
+          }
+        }
+
+        return lines;
+      }
+
+      // Fallback
+      return [
+        { t: 'warn', v: '  AI Advisor requires backend connection.' },
+        { t: 'muted', v: '  Start the server: npm start' },
+      ];
+    }
+  },
+};
+
+// ── Local fallback for analyze when no backend ──
+function generateLocalAnalysis(pair) {
+  const rsi = (30 + Math.random() * 50).toFixed(1);
+  const macd = ((Math.random() - 0.45) * 0.8).toFixed(4);
+  const signals = ['Bullish Divergence', 'Momentum Breakout', 'Mean Reversion', 'Volume Spike', 'Accumulation Phase', 'Support Bounce'];
+  const signal = signals[Math.floor(Math.random() * signals.length)];
+  const conf = (0.55 + Math.random() * 0.42);
+  const confBar = '█'.repeat(Math.round(conf * 20)) + '░'.repeat(20 - Math.round(conf * 20));
+
+  return [
+    { t: 'heading', v: `  ╔═══════════════════════════════════════════════╗` },
+    { t: 'heading', v: `  ║  GRD-401 AI ANALYSIS — ${pair.padEnd(21)}║` },
+    { t: 'heading', v: `  ╚═══════════════════════════════════════════════╝` },
+    { t: 'out', v: '' },
+    { t: 'blue', v: '  [TECHNICAL INDICATORS]' },
+    { t: 'out', v: `  RSI(14)         ${rsi}  ${rsi > 70 ? '⚠ OVERBOUGHT' : rsi < 30 ? '⚠ OVERSOLD' : '● NEUTRAL'}` },
+    { t: 'out', v: `  MACD            ${macd > 0 ? '+' : ''}${macd}  (${macd > 0 ? 'bullish' : 'bearish'})` },
+    { t: 'out', v: '' },
+    { t: 'blue', v: '  [SIGNAL DETECTED]' },
+    { t: 'info', v: `  Type            ${signal}` },
+    { t: 'out', v: `  Confidence      ${confBar} ${(conf * 100).toFixed(0)}%` },
+    { t: 'out', v: '' },
+    { t: 'muted', v: '  Full AI analysis requires backend. Start server: npm start' },
+  ];
+}
+
+// ── Output helpers ──
+function printLine(text, cls = 'out') {
+  const el = document.createElement('div');
+  el.className = 'term-line';
+  el.innerHTML = `<span class="t-${cls}">${escHtml(text)}</span>`;
+  termOut.appendChild(el);
+  termOut.scrollTop = termOut.scrollHeight;
+}
+
+function printParts(line) {
+  const el = document.createElement('div');
+  el.className = 'term-line';
+  if (line.parts) {
+    let html = `<span class="t-${line.t}">${escHtml(line.v)}</span>`;
+    for (const p of line.parts) html += `<span class="t-${p.t}">${escHtml(p.v)}</span>`;
+    el.innerHTML = html;
+  } else {
+    el.innerHTML = `<span class="t-${line.t}">${escHtml(line.v)}</span>`;
+  }
+  termOut.appendChild(el);
+  termOut.scrollTop = termOut.scrollHeight;
+}
+
+function printCmd(cmd) {
+  const el = document.createElement('div');
+  el.className = 'term-line';
+  el.innerHTML = `<span class="t-prompt">grd-401 ❯ </span><span class="t-cmd">${escHtml(cmd)}</span>`;
+  termOut.appendChild(el);
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Typewriter output ──
+async function typeOutput(lines) {
+  for (let i = 0; i < lines.length; i++) {
+    await new Promise(r => setTimeout(r, 30 + Math.random() * 40));
+    printParts(lines[i]);
+  }
+}
+
+// ── Execute command ──
+async function executeCmd(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return;
+
+  cmdHistory.unshift(trimmed);
+  if (cmdHistory.length > 50) cmdHistory.pop();
+  historyIdx = -1;
+
+  printCmd(trimmed);
+
+  const parts = trimmed.split(/\s+/);
+  const cmdName = parts[0].toLowerCase();
+  const args = parts.slice(1);
+
+  const cmd = commands[cmdName];
+  if (!cmd) {
+    printLine(`  Command not found: ${cmdName}`, 'err');
+    printLine('  Type "help" for available commands', 'muted');
+    return;
+  }
+
+  const result = cmd.fn(args);
+  if (result && result.length > 0) {
+    await typeOutput(result);
+  }
+}
+
+// ── Autocomplete ──
+function updateAC(val) {
+  termAC.innerHTML = '';
+  acIdx = -1;
+  if (!val) { termAC.classList.remove('show'); return; }
+
+  const matches = Object.entries(commands).filter(([name]) => name.startsWith(val.toLowerCase()));
+  if (matches.length === 0 || (matches.length === 1 && matches[0][0] === val.toLowerCase())) {
+    termAC.classList.remove('show');
+    return;
+  }
+
+  for (const [name, cmd] of matches) {
+    const item = document.createElement('div');
+    item.className = 'ac-item';
+    item.innerHTML = `<span>${name}</span><span class="ac-desc">${cmd.desc}</span>`;
+    item.addEventListener('click', () => {
+      termInput.value = name + ' ';
+      termAC.classList.remove('show');
+      termInput.focus();
+    });
+    termAC.appendChild(item);
+  }
+  termAC.classList.add('show');
+}
+
+// ── Input handlers ──
+termInput.addEventListener('input', (e) => {
+  const val = e.target.value.split(/\s+/)[0];
+  updateAC(val);
+});
+
+termInput.addEventListener('keydown', (e) => {
+  const acItems = termAC.querySelectorAll('.ac-item');
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (acItems.length > 0) {
+      const idx = Math.max(acIdx, 0);
+      const name = acItems[idx]?.querySelector('span')?.textContent;
+      if (name) {
+        termInput.value = name + ' ';
+        termAC.classList.remove('show');
+      }
+    }
+    return;
+  }
+
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (termAC.classList.contains('show') && acItems.length > 0) {
+      acIdx = Math.max(acIdx - 1, 0);
+      acItems.forEach((it, i) => it.classList.toggle('active', i === acIdx));
+    } else if (cmdHistory.length > 0) {
+      historyIdx = Math.min(historyIdx + 1, cmdHistory.length - 1);
+      termInput.value = cmdHistory[historyIdx];
+    }
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (termAC.classList.contains('show') && acItems.length > 0) {
+      acIdx = Math.min(acIdx + 1, acItems.length - 1);
+      acItems.forEach((it, i) => it.classList.toggle('active', i === acIdx));
+    } else if (historyIdx > 0) {
+      historyIdx--;
+      termInput.value = cmdHistory[historyIdx];
+    } else {
+      historyIdx = -1;
+      termInput.value = '';
+    }
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    termAC.classList.remove('show');
+    const val = termInput.value;
+    termInput.value = '';
+    executeCmd(val);
+    return;
+  }
+
+  if (e.key === 'l' && e.ctrlKey) {
+    e.preventDefault();
+    termOut.innerHTML = '';
+    return;
+  }
+
+  if (e.key === 'Escape') {
+    termAC.classList.remove('show');
+  }
+});
+
+// Click terminal to focus input
+termWrap.addEventListener('click', () => termInput.focus());
+
+// ── Live feed ──
+function startLiveFeed() {
+  const feedSignals = [
+    ['SOL/USDC', 'Momentum shift detected'],
+    ['JUP/USDC', 'Volume anomaly +340%'],
+    ['RAY/SOL', 'Bid wall forming at 0.0179'],
+    ['WIF/USDC', 'Whale accumulation detected'],
+    ['BONK/SOL', 'Breakout above resistance'],
+    ['ORCA/SOL', 'Divergence on 5m chart'],
+    ['PYTH/USDC', 'Liquidity spike +$1.2M'],
+    ['JTO/SOL', 'Mean reversion signal'],
+    ['SOL/USDC', 'Order flow imbalance 78% buy'],
+    ['JUP/USDC', 'Support test at $1.41'],
+  ];
+
+  liveFeedInterval = setInterval(() => {
+    const sig = feedSignals[Math.floor(Math.random() * feedSignals.length)];
+    const conf = (0.6 + Math.random() * 0.35).toFixed(2);
+    const now = new Date().toTimeString().split(' ')[0];
+    const el = document.createElement('div');
+    el.className = 'term-line term-feed-line';
+    el.innerHTML = `<span class="t-muted">${now}</span> <span class="t-info">[SIGNAL]</span> <span class="t-out">${sig[0]} — ${sig[1]}</span> <span class="t-muted">(${(conf*100).toFixed(0)}%)</span>`;
+    termOut.appendChild(el);
+    termOut.scrollTop = termOut.scrollHeight;
+  }, 6000 + Math.random() * 4000);
+}
+
+// ── Boot sequence ──
+async function bootTerminal() {
+  const bootLines = [
+    { t: 'out', v: '  [BOOT] Loading GRD-401 v4.1.0...' },
+    { t: 'out', v: '  [BOOT] Connecting to Solana RPC cluster...' },
+    { t: 'ok',  v: '  [CONN] RPC endpoint connected — latency: 42ms' },
+    { t: 'out', v: '  [INIT] Loading ML models: momentum_v3.2, meanrev_v2.8, flow_v4.0' },
+    { t: 'ok',  v: '  [INIT] Signal Engine ✓  Execution Core ✓  Risk Matrix ✓' },
+    { t: 'out', v: `  [SCAN] Monitoring ${agentState.poolsMonitored} liquidity pools...` },
+    { t: 'ok',  v: '  [GRID] All systems online — agent ready' },
+    { t: 'out', v: '' },
+    { t: 'heading', v: '  ═══════════════════════════════════════════' },
+    { t: 'heading', v: '   GRD-401  AUTONOMOUS TRADING INTELLIGENCE' },
+    { t: 'heading', v: '  ═══════════════════════════════════════════' },
+    { t: 'out', v: '' },
+    { t: 'muted', v: '  Type "help" for commands • "analyze <pair>" for AI analysis • "advisor" for trade advice' },
+    { t: 'out', v: '' },
+  ];
+
+  for (const line of bootLines) {
+    await new Promise(r => setTimeout(r, 80 + Math.random() * 120));
+    printParts(line);
+  }
+
+  booted = true;
+  termInput.disabled = false;
+  termInput.focus();
+  startLiveFeed();
+}
+
+termInput.disabled = true;
+
+// Boot when terminal scrolls into view
+const termObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting && !booted) {
+    setTimeout(bootTerminal, 400);
+    termObserver.disconnect();
+  }
+}, { threshold: 0.3 });
+termObserver.observe(document.getElementById('terminal'));
+
+// ── SCROLL ANIMATIONS ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ═══════════════════════════════════════════════════
+//  WALLET CONNECT + AUTH + WEBSOCKET + API LAYER
+// ═══════════════════════════════════════════════════
+
+const API_BASE = window.location.origin;
+const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
+
+// ── State ──
+let authToken = localStorage.getItem('grd401_token') || null;
+let connectedWallet = localStorage.getItem('grd401_wallet') || null;
+let wsConnection = null;
+let wsReconnectTimer = null;
+let wsReconnectAttempts = 0;
+const MAX_RECONNECT = 3;
+
+// ── API Helper ──
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...opts.headers };
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+    if (res.status === 401) {
+      clearAuth();
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.error(`[API] ${path} error:`, err.message);
+    return null;
+  }
+}
+
+// ═══════════════════════════
+//  WALLET CONNECT (Phantom/Solflare)
+// ═══════════════════════════
+
+function getProvider() {
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solflare?.isSolflare) return window.solflare;
+  if (window.solana?.isPhantom) return window.solana;
+  return null;
+}
+
+async function handleWalletClick() {
+  const dropdown = document.getElementById('walletDropdown');
+
+  if (connectedWallet) {
+    dropdown.classList.toggle('show');
+    return;
+  }
+
+  const provider = getProvider();
+  if (!provider) {
+    alert('No Solana wallet found. Install Phantom or Solflare.');
+    window.open('https://phantom.app/', '_blank');
+    return;
+  }
+
+  try {
+    const resp = await provider.connect();
+    const wallet = resp.publicKey.toString();
+    // console.log('[WALLET] Connected:', wallet);
+
+    // Auth flow: get nonce → sign → verify
+    await authenticateWallet(wallet, provider);
+  } catch (err) {
+    console.error('[WALLET] Connect error:', err);
+  }
+}
+
+async function authenticateWallet(wallet, provider) {
+  // Step 1: Get nonce
+  const nonceData = await apiFetch(`/auth/nonce?wallet=${wallet}`);
+  if (!nonceData || !nonceData.message) {
+    console.error('[AUTH] Failed to get nonce');
+    fallbackConnect(wallet);
+    return;
+  }
+
+  try {
+    // Step 2: Sign message
+    const encoded = new TextEncoder().encode(nonceData.message);
+    const signed = await provider.signMessage(encoded, 'utf8');
+
+    // Extract signature bytes
+    let sigBase58;
+    if (signed.signature) {
+      // Phantom returns { signature: Uint8Array }
+      sigBase58 = btoa(String.fromCharCode(...signed.signature));
+    } else if (signed instanceof Uint8Array) {
+      sigBase58 = btoa(String.fromCharCode(...signed));
+    }
+
+    // Step 3: Verify with server
+    const verifyData = await apiFetch('/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet,
+        signature: Array.from(signed.signature || signed),
+      }),
+    });
+
+    if (verifyData && verifyData.token) {
+      authToken = verifyData.token;
+      connectedWallet = wallet;
+      localStorage.setItem('grd401_token', authToken);
+      localStorage.setItem('grd401_wallet', wallet);
+      onWalletConnected(wallet);
+    } else {
+      // console.warn('[AUTH] Verify failed, using fallback');
+      fallbackConnect(wallet);
+    }
+  } catch (err) {
+    console.error('[AUTH] Sign error:', err);
+    fallbackConnect(wallet);
+  }
+}
+
+function fallbackConnect(wallet) {
+  // If server auth fails (e.g. no backend running), still show wallet state
+  connectedWallet = wallet;
+  localStorage.setItem('grd401_wallet', wallet);
+  onWalletConnected(wallet);
+}
+
+async function onWalletConnected(wallet) {
+  const btn = document.getElementById('walletBtn');
+  const btnText = document.getElementById('walletBtnText');
+  const addrEl = document.getElementById('wdAddress');
+
+  btn.classList.add('connected');
+  btnText.textContent = wallet.slice(0, 4) + '...' + wallet.slice(-4);
+  addrEl.textContent = wallet.slice(0, 8) + '...' + wallet.slice(-8);
+  document.getElementById('wdSession').textContent = authToken ? 'Active' : 'Local only';
+
+  // Fetch wallet data
+  await updateWalletData(wallet);
+
+  // Connect WebSocket if not connected
+  if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+    connectWebSocket();
+  }
+
+  // Add wallet commands to terminal
+  registerWalletCommands();
+}
+
+async function updateWalletData(wallet) {
+  // Try API first
+  const balData = await apiFetch('/api/wallet/balance');
+  if (balData && balData.balance) {
+    document.getElementById('wdBalance').textContent = balData.balance.sol.toFixed(4) + ' SOL';
+  } else {
+    document.getElementById('wdBalance').textContent = '—';
+  }
+
+  const tokenData = await apiFetch('/api/wallet/tokens');
+  if (tokenData && tokenData.tokens) {
+    document.getElementById('wdTokens').textContent = tokenData.tokens.length + ' tokens';
+  } else {
+    document.getElementById('wdTokens').textContent = '—';
+  }
+}
+
+async function disconnectWallet() {
+  const provider = getProvider();
+  if (provider && provider.disconnect) {
+    try { await provider.disconnect(); } catch {}
+  }
+
+  if (authToken) {
+    await apiFetch('/auth/logout', { method: 'POST' });
+  }
+
+  clearAuth();
+}
+
+function clearAuth() {
+  authToken = null;
+  connectedWallet = null;
+  localStorage.removeItem('grd401_token');
+  localStorage.removeItem('grd401_wallet');
+
+  const btn = document.getElementById('walletBtn');
+  btn.classList.remove('connected');
+  document.getElementById('walletBtnText').textContent = 'Connect';
+  document.getElementById('walletDropdown').classList.remove('show');
+  document.getElementById('wdBalance').textContent = '—';
+  document.getElementById('wdTokens').textContent = '—';
+  document.getElementById('wdSession').textContent = '—';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('walletDropdown');
+  const btn = document.getElementById('walletBtn');
+  if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.classList.remove('show');
+  }
+});
+
+// ═══════════════════════════
+//  WEBSOCKET CLIENT
+// ═══════════════════════════
+
+function connectWebSocket() {
+  if (wsConnection && wsConnection.readyState === WebSocket.OPEN) return;
+
+  try {
+    wsConnection = new WebSocket(WS_URL);
+  } catch (err) {
+    startPollingFallback();
+    return;
+  }
+
+  wsConnection.onopen = () => {
+    // console.log('[WS] Connected');
+    wsReconnectAttempts = 0;
+    setWsStatus(true);
+
+    // Subscribe to all channels
+    wsConnection.send(JSON.stringify({
+      type: 'subscribe',
+      channels: ['prices', 'signals', 'trades', 'stats'],
+    }));
+  };
+
+  wsConnection.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      handleWsMessage(msg);
+    } catch {}
+  };
+
+  wsConnection.onclose = () => {
+    // console.log('[WS] Disconnected');
+    setWsStatus(false);
+    scheduleReconnect();
+  };
+
+  wsConnection.onerror = (err) => {
+    // Silent — expected when no backend running
+    setWsStatus(false);
+  };
+}
+
+function scheduleReconnect() {
+  if (wsReconnectAttempts >= MAX_RECONNECT) {
+    startPollingFallback();
+    return;
+  }
+  const delay = Math.min(1000 * Math.pow(2, wsReconnectAttempts), 30000);
+  wsReconnectAttempts++;
+  wsReconnectTimer = setTimeout(connectWebSocket, delay);
+}
+
+function setWsStatus(connected) {
+  const dot = document.getElementById('wsDot');
+  const label = document.getElementById('wsLabel');
+  if (connected) {
+    dot.classList.add('live');
+    label.classList.add('live');
+    label.textContent = 'LIVE';
+  } else {
+    dot.classList.remove('live');
+    label.classList.remove('live');
+    label.textContent = 'OFFLINE';
+  }
+}
+
+function handleWsMessage(msg) {
+  switch (msg.type) {
+    case 'init':
+      applyPrices(msg.data.prices);
+      applyStats(msg.data.stats, msg.data.agentState);
+      break;
+
+    case 'prices':
+      applyPrices(msg.data);
+      break;
+
+    case 'signal':
+      applySignal(msg.data);
+      break;
+
+    case 'trade':
+      applyTrade(msg.data);
+      break;
+
+    case 'stats':
+      applyStats(msg.data, msg.data.agentState);
+      break;
+
+    case 'subscribed':
+      // console.log('[WS] Subscribed to:', msg.channels);
+      break;
+  }
+}
+
+// ── Apply real-time data to dashboard ──
+function applyPrices(prices) {
+  if (!prices) return;
+  // Update dashboard chart with SOL price if available
+  if (prices['SOL/USDC']) {
+    const solPrice = prices['SOL/USDC'].price;
+    if (typeof chartData !== 'undefined' && chartData.length > 0) {
+      chartData.shift();
+      chartData.push(solPrice);
+      drawChart();
+    }
+  }
+}
+
+function applyStats(stats, agentState) {
+  if (!stats) return;
+  // Update stat bar
+  const tradesEl = document.getElementById('statTrades');
+  const winEl = document.getElementById('statWinrate');
+  if (tradesEl && stats.totalAllTime) tradesEl.textContent = stats.totalAllTime.toLocaleString();
+  if (winEl && stats.winRate) winEl.textContent = stats.winRate.toFixed(1);
+
+  // Update dashboard panels
+  if (agentState) {
+    const pv = parseFloat(agentState.portfolio_value || '0');
+    if (pv > 0) {
+      const pvEl = document.getElementById('dashPortfolio');
+      if (pvEl) pvEl.textContent = '$' + pv.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    }
+  }
+}
+
+function applySignal(signal) {
+  if (!signal) return;
+  // Push to terminal live feed if active
+  if (liveFeedInterval || booted) {
+    const now = new Date().toTimeString().split(' ')[0];
+    const el = document.createElement('div');
+    el.className = 'term-line term-feed-line';
+    const confPct = (signal.confidence * 100).toFixed(0);
+    const actionClass = signal.action === 'ACTIONABLE' || signal.action === 'EXECUTED' ? 't-ok' : 't-warn';
+    el.innerHTML = `<span class="t-muted">${now}</span> <span class="t-info">[SIGNAL]</span> <span class="t-out">${signal.pair} — ${signal.type}</span> <span class="t-muted">(${confPct}%)</span> <span class="${actionClass}">${signal.action}</span>`;
+    termOut.appendChild(el);
+
+    // Show AI reasoning summary if available
+    if (signal.reasoning && signal.reasoning.summary) {
+      const rEl = document.createElement('div');
+      rEl.className = 'term-line';
+      rEl.innerHTML = `<span class="t-muted">        </span> <span class="t-muted">[AI]</span> <span class="t-out" style="opacity:0.7;font-size:12px">${escHtml(signal.reasoning.summary.slice(0, 120))}${signal.reasoning.summary.length > 120 ? '...' : ''}</span>`;
+      termOut.appendChild(rEl);
+
+      if (signal.reasoning.conviction) {
+        const cvClass = signal.reasoning.conviction === 'HIGH' ? 't-ok' : signal.reasoning.conviction.includes('LOW') ? 't-warn' : 't-muted';
+        const cvEl = document.createElement('div');
+        cvEl.className = 'term-line';
+        cvEl.innerHTML = `<span class="t-muted">        </span> <span class="t-muted">[AI]</span> <span class="${cvClass}"> Conviction: ${signal.reasoning.conviction}</span>`;
+        termOut.appendChild(cvEl);
+      }
+    }
+
+    termOut.scrollTop = termOut.scrollHeight;
+  }
+}
+
+function applyTrade(trade) {
+  if (!trade) return;
+  // Add to dashboard trade rows
+  const tradeContainer = document.getElementById('tradeRows');
+  if (tradeContainer) {
+    const time = new Date(trade.created_at).toTimeString().split(' ')[0];
+    const sideClass = trade.side === 'BUY' ? 'side-buy' : 'side-sell';
+    const html = `<div class="trade-row">
+      <span class="pair">${trade.pair}</span>
+      <span class="${sideClass}">${trade.side}</span>
+      <span class="price">${parseFloat(trade.price).toPrecision(4)}</span>
+      <span class="amount">${trade.amount}</span>
+      <span class="time">${time}</span>
+    </div>`;
+    tradeContainer.innerHTML = html + tradeContainer.innerHTML;
+    if (tradeContainer.children.length > 8) {
+      tradeContainer.removeChild(tradeContainer.lastElementChild);
+    }
+  }
+
+  // Terminal notification
+  if (booted) {
+    const el = document.createElement('div');
+    el.className = 'term-line term-feed-line';
+    const now = new Date().toTimeString().split(' ')[0];
+    el.innerHTML = `<span class="t-muted">${now}</span> <span class="t-ok">[EXEC]</span> <span class="t-out">${trade.side} ${trade.amount} ${trade.pair.split('/')[0]} @ ${parseFloat(trade.price).toPrecision(6)}</span> <span class="t-muted">(${trade.latency_ms}ms)</span>`;
+    termOut.appendChild(el);
+    termOut.scrollTop = termOut.scrollHeight;
+  }
+}
+
+// ── Polling fallback when WS unavailable ──
+let pollingTimer = null;
+
+function startPollingFallback() {
+  if (pollingTimer) return;
+  // console.log('[POLL] Starting polling fallback');
+
+  pollingTimer = setInterval(async () => {
+    const data = await apiFetch('/api/stats');
+    if (data) {
+      applyStats(data.stats, data.agentState);
+    }
+
+    const priceData = await apiFetch('/api/prices');
+    if (priceData) {
+      applyPrices(priceData.prices);
+    }
+  }, 5000);
+}
+
+// ═══════════════════════════
+//  TERMINAL ↔ API COMMANDS
+// ═══════════════════════════
+
+function registerWalletCommands() {
+  // Override terminal commands to use real API when connected
+
+  commands.wallet = {
+    desc: 'Show connected wallet info',
+    fn: async () => {
+      if (!connectedWallet) return [{ t: 'warn', v: '  No wallet connected. Click "Connect" in nav.' }];
+      const lines = [
+        { t: 'heading', v: '  WALLET INFO' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Address     ${connectedWallet}` },
+        { t: 'out', v: `  Session     ${authToken ? 'Authenticated' : 'Local only'}` },
+      ];
+
+      const balData = await apiFetch('/api/wallet/balance');
+      if (balData && balData.balance) {
+        lines.push({ t: 'info', v: `  SOL         ${balData.balance.sol.toFixed(6)} SOL` });
+      }
+
+      const tokData = await apiFetch('/api/wallet/tokens');
+      if (tokData && tokData.tokens && tokData.tokens.length > 0) {
+        lines.push({ t: 'out', v: '' });
+        lines.push({ t: 'heading', v: '  TOKEN ACCOUNTS' });
+        for (const tok of tokData.tokens.slice(0, 10)) {
+          lines.push({ t: 'out', v: `  ${tok.mint.slice(0,8)}...  ${tok.amount}` });
+        }
+        if (tokData.tokens.length > 10) {
+          lines.push({ t: 'muted', v: `  ... and ${tokData.tokens.length - 10} more` });
+        }
+      }
+
+      return lines;
+    }
+  };
+
+  commands.mytrades = {
+    desc: 'Your personal trade history',
+    fn: async () => {
+      if (!authToken) return [{ t: 'warn', v: '  Not authenticated. Connect wallet first.' }];
+      const data = await apiFetch('/api/wallet/trades?limit=10');
+      if (!data || !data.trades.length) return [{ t: 'muted', v: '  No trades found for your wallet.' }];
+
+      const lines = [
+        { t: 'heading', v: '  YOUR TRADES' },
+        { t: 'muted', v: '  ────────────────────────────────────────────────────────' },
+      ];
+
+      for (const tr of data.trades) {
+        const time = new Date(tr.created_at).toTimeString().split(' ')[0];
+        const sideClass = tr.side === 'BUY' ? 'ok' : 'err';
+        lines.push({ t: 'out', v: `  ${time}  ${tr.pair.padEnd(13)}`, parts: [
+          { t: sideClass, v: `${tr.side.padEnd(6)} ` },
+          { t: 'out', v: `${tr.price.toPrecision(6).padEnd(14)} ${String(tr.amount).padEnd(10)} ${tr.status}` },
+        ]});
+      }
+
+      if (data.stats) {
+        lines.push({ t: 'muted', v: '  ────────────────────────────────────────────────────────' });
+        lines.push({ t: 'muted', v: `  Total: ${data.stats.total} trades (${data.stats.buys} buys, ${data.stats.sells} sells)` });
+      }
+
+      return lines;
+    }
+  };
+
+  commands.network = {
+    desc: 'Solana network info (live)',
+    fn: async () => {
+      const data = await apiFetch('/api/network');
+      if (!data || !data.network) return [{ t: 'err', v: '  Failed to fetch network info' }];
+      const n = data.network;
+      return [
+        { t: 'heading', v: '  SOLANA NETWORK' },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Network       ${n.network || '—'}` },
+        { t: 'out', v: `  Slot          ${n.slot ? n.slot.toLocaleString() : '—'}` },
+        { t: 'out', v: `  Block Height  ${n.blockHeight ? n.blockHeight.toLocaleString() : '—'}` },
+        { t: 'out', v: `  Epoch         ${n.epoch || '—'}` },
+        { t: 'out', v: `  RPC           ${n.rpcUrl || '—'}` },
+      ];
+    }
+  };
+
+  // Update help to include new commands
+  const origHelp = commands.help.fn;
+  commands.help.fn = (args) => {
+    const result = origHelp(args);
+    if (!args[0]) {
+      // Find the UTILITY section and add wallet commands after it
+      const insertIdx = result.findIndex(l => l.v && l.v.includes('[UTILITY]'));
+      if (insertIdx >= 0) {
+        const walletCmds = [
+          { t: 'out', v: '' },
+          { t: 'blue', v: '  [WALLET]' },
+          { t: 'out', v: '    wallet         Show connected wallet info' },
+          { t: 'out', v: '    mytrades       Your personal trade history' },
+          { t: 'out', v: '    network        Solana network info (live)' },
+        ];
+        result.splice(insertIdx, 0, ...walletCmds);
+      }
+    }
+    return result;
+  };
+
+  // Override exec to use API when authenticated
+  const origExec = commands.exec.fn;
+  commands.exec.fn = async (args) => {
+    if (authToken && args.length >= 3) {
+      const data = await apiFetch('/api/execute', {
+        method: 'POST',
+        body: JSON.stringify({ pair: args[1], side: args[0], amount: args[2] }),
+      });
+      if (data && data.trade) {
+        const t = data.trade;
+        return [
+          { t: 'heading', v: `  EXECUTING ${t.side} ORDER (via API)` },
+          { t: 'muted', v: '  ─────────────────────────────────────────────' },
+          { t: 'out', v: `  Pair              ${t.pair}` },
+          { t: 'out', v: `  Side              ${t.side}` },
+          { t: 'out', v: `  Amount            ${t.amount}` },
+          { t: 'out', v: `  Price             ${t.price}` },
+          { t: 'out', v: `  Slippage          ${t.slippage}%` },
+          { t: 'out', v: `  Latency           ${t.latency_ms}ms` },
+          { t: 'out', v: '' },
+          { t: 'ok', v: `  ✓ ORDER FILLED — ${t.side} ${t.amount} ${t.pair.split('/')[0]} @ ${t.price}` },
+          { t: 'muted', v: `  TX: ${t.tx_hash}` },
+          { t: 'muted', v: `  ID: ${t.id}` },
+        ];
+      } else if (data && data.error) {
+        return [{ t: 'err', v: `  ${data.error}` }];
+      }
+    }
+    // Fallback to simulated
+    return origExec(args);
+  };
+
+  // Override scan to use API
+  const origScan = commands.scan.fn;
+  commands.scan.fn = async (args) => {
+    if (!args[0]) return [{ t: 'warn', v: '  Usage: scan <PAIR>  (e.g. scan SOL/USDC)' }];
+
+    const data = await apiFetch('/api/scan', {
+      method: 'POST',
+      body: JSON.stringify({ pair: args[0] }),
+    });
+
+    if (data && data.scan) {
+      const s = data.scan;
+      const confNum = s.signal.confidence;
+      const confBar = '█'.repeat(Math.round(confNum * 20)) + '░'.repeat(20 - Math.round(confNum * 20));
+      return [
+        { t: 'heading', v: `  SCAN: ${s.pair} (via API)` },
+        { t: 'muted', v: '  ─────────────────────────────────────────────' },
+        { t: 'out', v: `  Price             ${s.price.toPrecision(6)}` },
+        { t: 'out', v: `  24h High          ${s.high24h.toPrecision(6)}` },
+        { t: 'out', v: `  24h Low           ${s.low24h.toPrecision(6)}` },
+        { t: 'out', v: `  24h Volume        $${Math.round(s.volume24h).toLocaleString()}` },
+        { t: 'out', v: `  24h Change        ${s.change24h > 0 ? '+' : ''}${s.change24h.toFixed(2)}%` },
+        { t: 'out', v: `  Spread            ${s.spread}%` },
+        { t: 'out', v: `  Liquidity         $${Math.round(s.liquidity).toLocaleString()}` },
+        { t: 'out', v: '' },
+        { t: 'info', v: `  Signal:           ${s.signal.type}` },
+        { t: 'out', v: `  Model:            ${s.signal.model}` },
+        { t: 'out', v: `  Confidence:       ${confBar} ${(confNum * 100).toFixed(0)}%` },
+        { t: 'out', v: '' },
+        s.signal.actionable
+          ? { t: 'ok', v: '  ✓ ACTIONABLE — Confidence above threshold' }
+          : { t: 'warn', v: '  ⚠ MONITORING — Below action threshold' },
+      ];
+    }
+
+    // Fallback to simulated
+    return origScan(args);
+  };
+
+  // Override config to use API when authenticated
+  const origConfig = commands.config.fn;
+  commands.config.fn = async (args) => {
+    if (authToken && args[0] === 'set' && args[1] && args[2]) {
+      const data = await apiFetch('/api/config', {
+        method: 'POST',
+        body: JSON.stringify({ key: args[1], value: args[2] }),
+      });
+      if (data && data.success) {
+        return [
+          { t: 'ok', v: `  ✓ [API] ${args[1]} updated: ${args[2]}` },
+          { t: 'muted', v: '  Configuration persisted to server' },
+        ];
+      }
+    }
+
+    if (authToken && !args[0]) {
+      const data = await apiFetch('/api/config');
+      if (data && data.config) {
+        const c = data.config;
+        return [
+          { t: 'heading', v: '  AGENT CONFIGURATION (from server)' },
+          { t: 'muted', v: '  ─────────────────────────────────────────────' },
+          { t: 'out', v: `  max_position_pct   ${c.max_position_pct || '5.0'}%` },
+          { t: 'out', v: `  stop_loss_pct      ${c.stop_loss_pct || '2.5'}%` },
+          { t: 'out', v: `  trailing_stop      ${c.trailing_stop || 'true'}` },
+          { t: 'out', v: `  slippage_tolerance ${c.slippage_tolerance || '0.3'}%` },
+          { t: 'out', v: `  pools_monitored    ${c.pools_monitored || '847'}` },
+          { t: 'out', v: '' },
+          { t: 'muted', v: '  Use: config set <param> <value>' },
+        ];
+      }
+    }
+
+    return origConfig(args);
+  };
+}
+
+// ═══════════════════════════
+//  AUTO-INIT
+// ═══════════════════════════
+
+// Restore session on page load
+(async function init() {
+  // Try reconnect if we have stored wallet
+  if (connectedWallet) {
+    const btn = document.getElementById('walletBtn');
+    const btnText = document.getElementById('walletBtnText');
+    btn.classList.add('connected');
+    btnText.textContent = connectedWallet.slice(0, 4) + '...' + connectedWallet.slice(-4);
+    document.getElementById('wdAddress').textContent = connectedWallet.slice(0, 8) + '...' + connectedWallet.slice(-8);
+    document.getElementById('wdSession').textContent = authToken ? 'Active' : 'Local only';
+    registerWalletCommands();
+
+    // Verify token still valid
+    if (authToken) {
+      const health = await apiFetch('/api/health');
+      if (!health) {
+        // Server not reachable or token expired — keep local state
+        // console.log('[INIT] Server not reachable, using local mode');
+      } else {
+        updateWalletData(connectedWallet);
+      }
+    }
+  }
+
+  // Connect WebSocket
+  connectWebSocket();
+})();
+</script>
+</body>
+</html>

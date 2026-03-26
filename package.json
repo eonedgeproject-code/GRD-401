@@ -1,0 +1,22 @@
+{
+  "name": "grd-401",
+  "version": "4.1.0",
+  "description": "GRD-401 — Autonomous AI Trading Agent on Solana",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "setup": "node server/db/setup.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "bs58": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "tweetnacl": "^1.0.3",
+    "uuid": "^9.0.0",
+    "ws": "^8.16.0"
+  }
+}
